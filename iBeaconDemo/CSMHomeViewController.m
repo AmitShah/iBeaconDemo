@@ -9,6 +9,7 @@
 #import "CSMHomeViewController.h"
 #import "CSMLocationUpdateController.h"
 #import "CSMAppDelegate.h"
+#import "CSMLocationManager.h"
 
 #define kHorizontalPadding 20
 #define kVerticalPadding 10
@@ -25,7 +26,8 @@
 - (id)init {
     self = [super init];
     if (self) {
-
+        // initate peripheral iBeacon monitoring mode
+        [[CSMLocationManager sharedManager] monitorForRegions];
     }
     return self;
 }

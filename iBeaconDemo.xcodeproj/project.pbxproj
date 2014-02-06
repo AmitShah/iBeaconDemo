@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F44A41D187344640029864C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F44A41C187344640029864C /* AVFoundation.framework */; };
+		3F44A41F187344710029864C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F44A41E187344710029864C /* AudioToolbox.framework */; };
 		D573F8E41805C469001004B2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D573F8E31805C469001004B2 /* Foundation.framework */; };
 		D573F8E61805C469001004B2 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D573F8E51805C469001004B2 /* CoreGraphics.framework */; };
 		D573F8E81805C469001004B2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D573F8E71805C469001004B2 /* UIKit.framework */; };
@@ -24,6 +26,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3F44A41C187344640029864C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		3F44A41E187344710029864C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		D573F8E01805C469001004B2 /* iBeaconDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iBeaconDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D573F8E31805C469001004B2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D573F8E51805C469001004B2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -55,6 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F44A41F187344710029864C /* AudioToolbox.framework in Frameworks */,
+				3F44A41D187344640029864C /* AVFoundation.framework in Frameworks */,
 				D5A433421808417600228EFC /* CoreBluetooth.framework in Frameworks */,
 				D5A433401808415F00228EFC /* CoreLocation.framework in Frameworks */,
 				D573F8E61805C469001004B2 /* CoreGraphics.framework in Frameworks */,
@@ -86,6 +92,8 @@
 		D573F8E21805C469001004B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3F44A41E187344710029864C /* AudioToolbox.framework */,
+				3F44A41C187344640029864C /* AVFoundation.framework */,
 				D5A433411808417600228EFC /* CoreBluetooth.framework */,
 				D573F927180601B1001004B2 /* CoreLocation.framework */,
 				D573F8E31805C469001004B2 /* Foundation.framework */,
@@ -299,6 +307,7 @@
 				GCC_PREFIX_HEADER = "iBeaconDemo/iBeaconDemo-Prefix.pch";
 				INFOPLIST_FILE = "iBeaconDemo/iBeaconDemo-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -312,6 +321,7 @@
 				GCC_PREFIX_HEADER = "iBeaconDemo/iBeaconDemo-Prefix.pch";
 				INFOPLIST_FILE = "iBeaconDemo/iBeaconDemo-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

@@ -14,7 +14,7 @@ typedef NS_ENUM(NSUInteger, CSMApplicationMode) {
     CSMApplicationModeRegionMonitoring
 };
 
-#define kUniqueRegionIdentifier @"iBeacon Demo"
+#define kUniqueRegionIdentifier @"Amit Beacon Demo"
 
 #define kAppTintColor [UIColor colorWithRed:0.12 green:0.50 blue:0.15 alpha:1.0]
 

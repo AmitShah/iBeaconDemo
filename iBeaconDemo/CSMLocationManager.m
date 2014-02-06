@@ -50,11 +50,41 @@ static CSMLocationManager *_sharedInstance = nil;
     }
 }
 
+//Amit wrote this function
+- (void)startAdvertisingBeacon :(NSString *)data {
+    // initialize new CLBeaconRegion and start advertising target region
+    NSData *d = [data dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSMutableData *ndata = [[NSMutableData alloc] initWithCapacity : 16 ];
+    [ndata appendData: d];
+    [ndata increaseLengthBy: 16-d.length];
+    uint8_t *rawBytes = [ndata bytes];
+    NSUUID * temp = [[NSUUID alloc] initWithUUIDBytes: rawBytes];
+    CLBeaconRegion * beacon = [[CLBeaconRegion alloc] initWithProximityUUID:temp
+                                                                      major:1
+                                                                      minor: 0
+                                                                 identifier:@"stadium.io"];
+    
+    if (self.peripheralManager.state == CBPeripheralManagerStatePoweredOn && ![self.peripheralManager isAdvertising]) {
+        self.peripheralData =[beacon peripheralDataWithMeasuredPower:nil];
+        [self.peripheralManager startAdvertising:self.peripheralData];
+        //Amit Test if we can after a very arbritrary time stop beaconing
+        NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(stopBeacon) userInfo:nil repeats:NO];
+    }
+}
+
+- (void) stopBeacon{
+    if([self.peripheralManager isAdvertising]){
+        [self.peripheralManager stopAdvertising];
+    }
+}
 - (void)startAdvertisingBeacon {
     // initialize new CLBeaconRegion and start advertising target region
     if (![self.peripheralManager isAdvertising]) {
         self.peripheralData = [[CSMBeaconRegion targetRegion] peripheralDataWithMeasuredPower:nil];
         [self.peripheralManager startAdvertising:self.peripheralData];
+        //Amit Test if we can after a very arbritrary time stop beaconing
+        NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(stopAdvertisingBeacon) userInfo:nil repeats:NO];
     }
 }
 
@@ -112,7 +142,8 @@ static CSMLocationManager *_sharedInstance = nil;
         case CBPeripheralManagerStatePoweredOn:
             // start advertising CLBeaconRegion
             status = @"Now advertising iBeacon signal.  Monitor other device for location updates.";
-            [self startAdvertisingBeacon];
+            //Amit Disable this for now
+            //[self startAdvertisingBeacon];
             break;
             
         case CBPeripheralManagerStateResetting:
@@ -153,6 +184,22 @@ static CSMLocationManager *_sharedInstance = nil;
     }
 }
 
+- (void)monitorForRegions {
+    // initialize new location manager
+    if (!self.locationManager) {
+        self.locationManager = [[CLLocationManager alloc] init];
+        self.locationManager.delegate = self;
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    }
+    
+    [self.locationManager startMonitoringForRegion:[CSMBeaconRegion targetRegion]];
+        
+        // fire notification with initial status
+    [self fireUpdateNotificationForStatus:@"Initializing CLLocationManager and initiating region monitoring..."];
+    
+
+}
+
 - (void)stopMonitoringForRegion:(CLBeaconRegion*)region {
     // stop monitoring for region
     [self.locationManager stopMonitoringForRegion:region];
@@ -174,7 +221,13 @@ static CSMLocationManager *_sharedInstance = nil;
 }
 
 - (void)locationManager:(CLLocationManager *)manager didDetermineState:(CLRegionState)state forRegion:(CLRegion *)region {
-   
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.fireDate = Nil;
+    notification.alertBody = @"State changed";
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] presentLocalNotificationNow:notification];
+
     // handle notifyEntryStateOnDisplay
     // notify user they have entered the region, if you haven't already
     if (manager == self.locationManager &&
@@ -187,10 +240,26 @@ static CSMLocationManager *_sharedInstance = nil;
     }
 }
 
+- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification {
+    NSLog(@"Notification fired");
+}
+
+/*
+ this is callback is called in background + sleepmode
+ */
+
 - (void)locationManager:(CLLocationManager *)manager didEnterRegion:(CLRegion *)region {
 
     // handle notifyOnEntry
     // notify user they have entered the region, if you haven't already
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.alertBody = @"Enter";
+    notification.fireDate = Nil;
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    
+    [[UIApplication sharedApplication] presentLocalNotificationNow:notification];
+    
     if (manager == self.locationManager &&
         [region.identifier isEqualToString:kUniqueRegionIdentifier] &&
         !self.didShowEntranceNotifier) {
@@ -199,9 +268,19 @@ static CSMLocationManager *_sharedInstance = nil;
         [self startBeaconRanging];
     }
 }
-
+/*
+ this is callback is called in background + sleepmode
+ */
+ 
 - (void)locationManager:(CLLocationManager *)manager didExitRegion:(CLRegion *)region {
     
+    // notify user they have entered the region, if you haven't already
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.alertBody = @"Exit";
+    notification.fireDate = Nil;
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] presentLocalNotificationNow:notification];
     // optionally notify user they have left the region
     if (!self.didShowExitNotifier) {
         
@@ -217,8 +296,18 @@ static CSMLocationManager *_sharedInstance = nil;
     // stop beacon ranging
     [manager stopRangingBeaconsInRegion:[CSMBeaconRegion targetRegion]];
 }
-
+/*
+ this function only called in foreground
+ */
 - (void)locationManager:(CLLocationManager *)manager didRangeBeacons:(NSArray *)beacons inRegion:(CLBeaconRegion *)region {
+    
+    /*UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.fireDate = Nil;
+    notification.alertBody = @"Ranged beacons found";
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] presentLocalNotificationNow:notification];
+     */
     
     // identify closest beacon in range
     if ([beacons count] > 0) {
@@ -228,11 +317,15 @@ static CSMLocationManager *_sharedInstance = nil;
              Provide proximity based information to user.  You may choose to do this repeatedly
              or only once depending on the use case.  Optionally use major, minor values here to provide beacon-specific content
              */
+            // notify user they have entered the region, if you haven't already
+            
             [self fireUpdateNotificationForStatus:@"You are in the immediate vicinity of the Beacon."];
             
         } else if (closestBeacon.proximity == CLProximityNear) {
             // detect other nearby beacons
             // optionally hide previously displayed proximity based information
+            // notify user they have entered the region, if you haven't already
+            
             [self fireUpdateNotificationForStatus:@"There are Beacons nearby."];
         }
     } else {

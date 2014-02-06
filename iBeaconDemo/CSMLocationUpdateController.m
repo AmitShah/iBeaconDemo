@@ -22,6 +22,7 @@
 
 @property (nonatomic, strong) UILabel    *titleLabel;
 @property (nonatomic, strong) UITextView *statusView;
+@property (nonatomic, strong) UITextField *textField;
 
 @end
 
@@ -147,6 +148,26 @@
     [[CSMLocationManager sharedManager] initializePeripheralManager];
     
     self.title = @"Broadcasting iBeacon";
+    
+    //Amit: Add textfield input here
+    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(50, 400, 200, 40)];
+    self.textField.borderStyle = UITextBorderStyleRoundedRect;
+    self.textField.font = [UIFont systemFontOfSize:15];
+    self.textField.placeholder = @"enter text";
+    self.textField.autocorrectionType = UITextAutocorrectionTypeNo;
+    self.textField.keyboardType = UIKeyboardTypeDefault;
+    self.textField.returnKeyType = UIReturnKeyDone;
+    self.textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+    self.textField.delegate = self;
+    [self.view addSubview:self.textField];
+
+}
+
+-(BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self.textField resignFirstResponder];
+    [[CSMLocationManager sharedManager] startAdvertisingBeacon: self.textField.text];
+    return YES;
 }
 
 

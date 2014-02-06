@@ -18,8 +18,12 @@
 
 - (void)initializeRegionMonitoring;
 
+- (void)monitorForRegions;
+
 - (void)stopMonitoringForRegion:(CLBeaconRegion*)region;
 
 - (void)stopAdvertisingBeacon;
+
+- (void)startAdvertisingBeacon:(NSString*) data;
 
 @end
