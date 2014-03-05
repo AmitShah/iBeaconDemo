@@ -27,7 +27,7 @@
     self = [super init];
     if (self) {
         // initate peripheral iBeacon monitoring mode
-        [[CSMLocationManager sharedManager] monitorForRegions];
+        //[[CSMLocationManager sharedManager] monitorForRegions];
     }
     return self;
 }

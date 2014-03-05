@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 
 
 @interface CSMLocationManager : NSObject<CLLocationManagerDelegate>
@@ -15,6 +16,8 @@
 + (instancetype)sharedManager;
 
 - (void)initializePeripheralManager;
+
+- (void)initializeMotionManager;
 
 - (void)initializeRegionMonitoring;
 
@@ -25,5 +28,9 @@
 - (void)stopAdvertisingBeacon;
 
 - (void)startAdvertisingBeacon:(NSString*) data;
+
+- (void)outputAccelertionData:(CMAccelerometerData *)acceleration;
+
+- (void)outputRotationData:(CMGyroData *)rotation;
 
 @end

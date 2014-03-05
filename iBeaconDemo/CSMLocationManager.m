@@ -11,8 +11,10 @@
 #import "CSMAppDelegate.h"
 #import "CSMBeaconRegion.h"
 #import <CoreBluetooth/CoreBluetooth.h>
+#import <CoreMotion/CoreMotion.h>
 
 #define kLocationUpdateNotification @"updateNotification"
+#define kBackgroundUpdateNotification @"backgroundUpdate"
 
 @interface CSMLocationManager () <CBPeripheralManagerDelegate>
 
@@ -22,10 +24,12 @@
 @property (nonatomic, assign) BOOL                  isMonitoringRegion;
 @property (nonatomic, assign) BOOL                  didShowEntranceNotifier;
 @property (nonatomic, assign) BOOL                  didShowExitNotifier;
+@property (strong, nonatomic) CMMotionManager       *motionManager;
 
 @end
 
 static CSMLocationManager *_sharedInstance = nil;
+
 
 @implementation CSMLocationManager
 
@@ -50,6 +54,34 @@ static CSMLocationManager *_sharedInstance = nil;
     }
 }
 
+- (void)initializeMotionManager{
+    if(!self.motionManager){
+        self.motionManager = [[CMMotionManager alloc] init];
+        self.motionManager.accelerometerUpdateInterval = .1;
+        self.motionManager.gyroUpdateInterval = .1;
+        self.motionManager.deviceMotionUpdateInterval = 1;
+        
+        [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue]
+                                                 withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
+                                                     [self outputAccelertionData:accelerometerData];
+                                                     if(error){
+                                                         
+                                                         NSLog(@"%@", error);
+                                                     }
+                                                 }];
+        
+        [self.motionManager startGyroUpdatesToQueue:[NSOperationQueue currentQueue]
+                                        withHandler:^(CMGyroData *gyroData, NSError *error) {
+                                            [self outputRotationData:gyroData];
+                                        }];
+        
+        [self.motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue currentQueue]
+                                         withHandler:^(CMDeviceMotion *motion, NSError *error){
+                                             [self outputDeviceMotionData:motion];
+                                         }];
+    }
+}
+
 //Amit wrote this function
 - (void)startAdvertisingBeacon :(NSString *)data {
     // initialize new CLBeaconRegion and start advertising target region
@@ -69,7 +101,7 @@ static CSMLocationManager *_sharedInstance = nil;
         self.peripheralData =[beacon peripheralDataWithMeasuredPower:nil];
         [self.peripheralManager startAdvertising:self.peripheralData];
         //Amit Test if we can after a very arbritrary time stop beaconing
-        NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(stopBeacon) userInfo:nil repeats:NO];
+        NSTimer * timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(stopBeacon) userInfo:nil repeats:NO];
     }
 }
 
@@ -116,6 +148,17 @@ static CSMLocationManager *_sharedInstance = nil;
                                                       userInfo:@{@"status" : status}];
 }
 
+- (void) fireUpdateNotificationForBackground:(UIColor *)color {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kBackgroundUpdateNotification
+                                                        object:Nil
+                                                      userInfo:@{@"color" : color}];
+}
+
+/*TODO - (void) fireUpdateNotificationForMotion:(UIColor *)color {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMotionUpdateNotification
+                                                        object:Nil
+                                                      userInfo:@{@"color" : color}];
+}*/
 
 #pragma mark - CBPeripheralManagerDelegate
 
@@ -178,6 +221,7 @@ static CSMLocationManager *_sharedInstance = nil;
         
         // begin region monitoring
         [self.locationManager startMonitoringForRegion:[CSMBeaconRegion targetRegion]];
+        [self startBeaconRanging]; //Amit
         
         // fire notification with initial status
         [self fireUpdateNotificationForStatus:@"Initializing CLLocationManager and initiating region monitoring..."];
@@ -193,7 +237,7 @@ static CSMLocationManager *_sharedInstance = nil;
     }
     
     [self.locationManager startMonitoringForRegion:[CSMBeaconRegion targetRegion]];
-        
+    
         // fire notification with initial status
     [self fireUpdateNotificationForStatus:@"Initializing CLLocationManager and initiating region monitoring..."];
     
@@ -249,7 +293,7 @@ static CSMLocationManager *_sharedInstance = nil;
  */
 
 - (void)locationManager:(CLLocationManager *)manager didEnterRegion:(CLRegion *)region {
-
+    
     // handle notifyOnEntry
     // notify user they have entered the region, if you haven't already
     UILocalNotification *notification = [[UILocalNotification alloc] init];
@@ -311,26 +355,38 @@ static CSMLocationManager *_sharedInstance = nil;
     
     // identify closest beacon in range
     if ([beacons count] > 0) {
+        NSString *dateString = [NSDateFormatter localizedStringFromDate:[NSDate date]
+                                                              dateStyle:NSDateFormatterShortStyle
+                                                              timeStyle:NSDateFormatterFullStyle];
         CLBeacon *closestBeacon = beacons[0];
+        
         if (closestBeacon.proximity == CLProximityImmediate) {
             /**
              Provide proximity based information to user.  You may choose to do this repeatedly
              or only once depending on the use case.  Optionally use major, minor values here to provide beacon-specific content
              */
             // notify user they have entered the region, if you haven't already
+            //closestBeacon.major  closestBeacon.minor;
             
-            [self fireUpdateNotificationForStatus:@"You are in the immediate vicinity of the Beacon."];
+            [self fireUpdateNotificationForBackground: [UIColor redColor] ];
+            [self fireUpdateNotificationForStatus:[@"You are in the immediate vicinity of the Beacon." stringByAppendingString:dateString]];
+            
             
         } else if (closestBeacon.proximity == CLProximityNear) {
             // detect other nearby beacons
             // optionally hide previously displayed proximity based information
             // notify user they have entered the region, if you haven't already
+            [self fireUpdateNotificationForBackground: [UIColor yellowColor] ];
+            [self fireUpdateNotificationForStatus:[@"There are Beacons nearby." stringByAppendingString:dateString]];
+        } else if (closestBeacon.proximity == CLProximityFar){
+            [self fireUpdateNotificationForBackground: [UIColor grayColor] ];
+            [self fireUpdateNotificationForStatus:[@"There are Beacons Far." stringByAppendingString:dateString]];
             
-            [self fireUpdateNotificationForStatus:@"There are Beacons nearby."];
         }
     } else {
         // no beacons in range - signal may have been lost
         // optionally hide previously displayed proximity based information
+        [self fireUpdateNotificationForBackground: [UIColor whiteColor] ];
         [self fireUpdateNotificationForStatus:@"There are currently no Beacons within range."];
     }
 }
@@ -373,6 +429,29 @@ static CSMLocationManager *_sharedInstance = nil;
     }
 }
 
+//motion sensor delegates
+
+-(void)outputAccelertionData:(CMAccelerometerData *)acceleration
+{
+    // fire notification with status update
+    //[self fireUpdateNotificationForStatus:[NSString stringWithFormat:@"Accelertion"]];
+}
+-(void)outputRotationData:(CMGyroData *)rotation
+{
+    // fire notification with status update
+    //[self fireUpdateNotificationForStatus:[NSString stringWithFormat:@"Rotation"]];
+    
+}
+-(void)outputDeviceMotionData:(CMDeviceMotion *)motion
+{
+    // fire notification with status update
+    
+    double calculateGs = sqrt(pow(motion.userAcceleration.x,2) + pow(motion.userAcceleration.y, 2) + pow(motion.userAcceleration.z,2));
+    if(calculateGs > 2){
+        [self startAdvertisingBeacon:[NSString stringWithFormat:@"%g", calculateGs ]];
+    }
+    [self fireUpdateNotificationForStatus:[NSString stringWithFormat:@"%g", calculateGs ]];
+}
 
 #pragma mark - UIAlertViewDelegate
 

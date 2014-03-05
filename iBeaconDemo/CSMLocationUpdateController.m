@@ -15,6 +15,7 @@
 #define kVerticalPadding 15
 
 #define kLocationUpdateNotification @"updateNotification"
+#define kBackgroundUpdateNotification @"backgroundUpdate"
 
 #define kLabelText [CSMAppDelegate appDelegate].applicationMode == CSMApplicationModePeripheral ? @"iBeacon Status:" : @"Region Monitoring Status:";
 
@@ -92,6 +93,7 @@
                                                                       options:0
                                                                       metrics:constraintMetrics
                                                                         views:constraintViews]];
+    [[CSMLocationManager sharedManager] initializeMotionManager];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -102,6 +104,13 @@
                                              selector:@selector(handleStatusUpdate:)
                                                  name:kLocationUpdateNotification
                                                object:nil];
+    
+    //Amit: observer for background color updates
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleBackgroundUpdate:)
+                                                 name:kBackgroundUpdateNotification
+                                               object:nil];
+    
     
     if ([CSMAppDelegate appDelegate].applicationMode == CSMApplicationModePeripheral) {
         
@@ -184,9 +193,19 @@
     
     // update status message displayed
     self.statusView.text = notification.userInfo[@"status"];
-    
     // log message for debugging
     NSLog(@"%@", notification.userInfo[@"status"]);
 }
+
+- (void)handleBackgroundUpdate:(NSNotification*)notification {
+    
+    UIColor *color = (UIColor *)notification.userInfo[@"color"];
+    //CIColor *coreColor = [CIColor colorWithString:@"0.5 0.5 0.5 1.0"];
+    //UIColor *color = [UIColor colorWithCIColor:coreColor];    // update status message displayed
+    [self.view setBackgroundColor:color];
+    // log message for debugging
+    NSLog(@"%@", notification.userInfo[@"color"]);
+}
+
 
 @end
