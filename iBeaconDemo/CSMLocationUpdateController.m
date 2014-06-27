@@ -24,7 +24,7 @@
 @property (nonatomic, strong) UILabel    *titleLabel;
 @property (nonatomic, strong) UITextView *statusView;
 @property (nonatomic, strong) UITextField *textField;
-
+@property (nonatomic,strong) UISwitch *sideSwitch;
 @end
 
 @implementation CSMLocationUpdateController
@@ -156,10 +156,28 @@
     
     [[CSMLocationManager sharedManager] initializePeripheralManager];
     
-    self.title = @"Broadcasting iBeacon";
+    self.title = @"Game Mode";
+    
+    //Amit: Add side selector here
+    UILabel *leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.center.x-120, 365,100,100)];
+    leftLabel.textAlignment = NSTextAlignmentCenter;
+    leftLabel.text = @"Side A";
+    [self.view addSubview:leftLabel];
+    
+    UILabel *rightLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.center.x+20, 365,100,100)];
+    rightLabel.textAlignment = NSTextAlignmentCenter;
+    rightLabel.text = @"Side B";
+    [self.view addSubview:rightLabel];
+    
+    
+    self.sideSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(self.view.center.x-25, 400,0, 0)];
+    [self.sideSwitch addTarget:self action:@selector(changeSwitch:) forControlEvents:UIControlEventValueChanged];
+    [[CSMLocationManager sharedManager] updateSelectedSide:@"A"];
+    [self.view addSubview:self.sideSwitch];
+    
     
     //Amit: Add textfield input here
-    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(50, 400, 200, 40)];
+    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(self.view.center.x-100, 450, 200, 40)];
     self.textField.borderStyle = UITextBorderStyleRoundedRect;
     self.textField.font = [UIFont systemFontOfSize:15];
     self.textField.placeholder = @"enter text";
@@ -179,6 +197,15 @@
     return YES;
 }
 
+-(void)changeSwitch:(id)sender{
+    if([sender isOn]){
+        [[CSMLocationManager sharedManager] updateSelectedSide:@"B"];
+        NSLog(@"Side B");
+    } else{
+        [[CSMLocationManager sharedManager] updateSelectedSide:@"A"];
+        NSLog(@"Side A");
+    }
+}
 
 #pragma mark - UIResponse
 

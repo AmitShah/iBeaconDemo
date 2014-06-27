@@ -33,4 +33,6 @@
 
 - (void)outputRotationData:(CMGyroData *)rotation;
 
+- (void)updateSelectedSide:(NSString *) side;
+
 @end

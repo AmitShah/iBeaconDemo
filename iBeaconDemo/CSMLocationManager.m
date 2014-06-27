@@ -24,6 +24,7 @@
 @property (nonatomic, assign) BOOL                  isMonitoringRegion;
 @property (nonatomic, assign) BOOL                  didShowEntranceNotifier;
 @property (nonatomic, assign) BOOL                  didShowExitNotifier;
+@property (nonatomic, assign) NSString              *sideSelected;
 @property (strong, nonatomic) CMMotionManager       *motionManager;
 
 @end
@@ -93,7 +94,7 @@ static CSMLocationManager *_sharedInstance = nil;
     uint8_t *rawBytes = [ndata bytes];
     NSUUID * temp = [[NSUUID alloc] initWithUUIDBytes: rawBytes];
     CLBeaconRegion * beacon = [[CLBeaconRegion alloc] initWithProximityUUID:temp
-                                                                      major:1
+                                                                      major:[self.sideSelected characterAtIndex:0]
                                                                       minor: 0
                                                                  identifier:@"stadium.io"];
     
@@ -103,6 +104,11 @@ static CSMLocationManager *_sharedInstance = nil;
         //Amit Test if we can after a very arbritrary time stop beaconing
         NSTimer * timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(stopBeacon) userInfo:nil repeats:NO];
     }
+}
+
+//Amit wrote this function
+- (void)updateSelectedSide:(NSString *)side {
+    self.sideSelected = side;
 }
 
 - (void) stopBeacon{
@@ -445,12 +451,12 @@ static CSMLocationManager *_sharedInstance = nil;
 -(void)outputDeviceMotionData:(CMDeviceMotion *)motion
 {
     // fire notification with status update
-    
+    NSLog(@"%@", self.sideSelected);
     double calculateGs = sqrt(pow(motion.userAcceleration.x,2) + pow(motion.userAcceleration.y, 2) + pow(motion.userAcceleration.z,2));
     if(calculateGs > 2){
         [self startAdvertisingBeacon:[NSString stringWithFormat:@"%g", calculateGs ]];
     }
-    [self fireUpdateNotificationForStatus:[NSString stringWithFormat:@"%g", calculateGs ]];
+    [self fireUpdateNotificationForStatus:[NSString stringWithFormat:@"%g", calculateGs]];
 }
 
 #pragma mark - UIAlertViewDelegate
